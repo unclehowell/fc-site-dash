@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM Quota Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: #0a0a0a; 
+      color: #fff; 
+      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+    }
+    .header {
+      padding: 1.5rem 2rem;
+      background: linear-gradient(90deg, #1a1a1a, #0a0a0a);
+      border-bottom: 1px solid #333;
+    }
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .header span {
+      color: #888;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      padding: 2rem;
+    }
+    .card {
+      background: #141414;
+      border: 1px solid #2a2a2a;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+    }
+    .card.unavailable {
+      opacity: 0.4;
+      border-color: #333;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .provider-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+    .model-name {
+      font-size: 0.875rem;
+      color: #888;
+    }
+    .status {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+    .status.available { color: #10b981; }
+    .status.unavailable { color: #ef4444; }
+    .reason {
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 0.5rem;
+    }
+    @media (min-width: 1024px) {
+      .grid { grid-template-columns: repeat(4, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>LLM Quota Dashboard</h1>
+    <span>Real-time API availability</span>
+  </div>
+  <div class="grid" id="quota-grid"></div>
+  <script>
+    async function loadQuota() {
+      try {
+        const res = await fetch('/api/quota');
+        const data = await res.json();
+        const grid = document.getElementById('quota-grid');
+        grid.innerHTML = data.map(p => `
+          <div class="card ${p.available ? '' : 'unavailable'}">
+            <div class="card-header">
+              <div class="color-dot" style="background: ${p.color}"></div>
+              <div>
+                <div class="provider-name">${p.name}</div>
+                <div class="model-name">${p.model}</div>
+              </div>
+            </div>
+            <div class="status ${p.available ? 'available' : 'unavailable'}">
+              ${p.available ? '✓ ACTIVE' : '✗ OFFLINE'}
+            </div>
+            ${p.reason ? `<div class="reason">${p.reason}</div>` : ''}
+          </div>
+        `).join('');
+      } catch (e) {
+        document.getElementById('quota-grid').innerHTML = '<p style="color:#ef4444;padding:2rem;">Failed to load quota data</p>';
+      }
+    }
+    loadQuota();
+    setInterval(loadQuota, 30000);
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4da919cae90bd22',t:'MTc5MjUyNjAwNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
